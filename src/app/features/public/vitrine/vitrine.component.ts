@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
@@ -163,6 +163,51 @@ import { SacolaService } from '../../../core/services/sacola.service';
           <span class="text-emerald-600">🔒 ambiente seguro</span>
         </div>
       </footer>
+
+      @if (ajudaAberta()) {
+        <div class="fixed inset-0 z-50 flex items-end justify-center bg-[#580444]/20 p-0 backdrop-blur-sm sm:items-center sm:p-4" (click)="fecharAjuda()">
+          <section role="dialog" aria-modal="true" aria-labelledby="titulo-ajuda"
+            class="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-[#FFFDF9] p-6 shadow-2xl sm:rounded-3xl"
+            (click)="$event.stopPropagation()">
+            <div class="flex items-start justify-between gap-4">
+              <h2 id="titulo-ajuda" class="text-2xl font-black text-[#580444]">Como funciona</h2>
+              <button type="button" (click)="fecharAjuda()" aria-label="Fechar"
+                class="rounded-full px-3 py-1 text-xl leading-none text-[#7D344B] transition hover:bg-[#F4E3E8]">×</button>
+            </div>
+
+            <ol class="mt-5 space-y-4">
+              @for (passo of passosAjuda; track passo.titulo; let i = $index) {
+                <li class="flex gap-3">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#580444] text-sm font-black text-white">{{ i + 1 }}</span>
+                  <div>
+                    <p class="font-bold text-[#580444]">{{ passo.titulo }}</p>
+                    <p class="text-sm text-slate-600">{{ passo.texto }}</p>
+                  </div>
+                </li>
+              }
+            </ol>
+
+            <p class="mt-5 rounded-2xl bg-[#FFE3E8] p-4 text-sm font-bold text-[#580444]">
+              ✨ Cada peça é única. Se alguém reservar antes de você, ela some da vitrine!
+            </p>
+
+            <h3 class="mt-6 text-sm font-black uppercase tracking-wider text-[#7D344B]">Dúvidas rápidas</h3>
+            <div class="mt-2 divide-y divide-[#EAD5DA] rounded-2xl border border-[#EAD5DA] bg-white">
+              @for (item of faqAjuda; track item.pergunta) {
+                <details class="group p-4">
+                  <summary class="cursor-pointer text-sm font-bold text-[#580444]">{{ item.pergunta }}</summary>
+                  <p class="mt-2 text-sm text-slate-600">{{ item.resposta }}</p>
+                </details>
+              }
+            </div>
+
+            <button type="button" (click)="fecharAjuda()"
+              class="mt-6 w-full rounded-full bg-[#F50057] px-6 py-3 text-sm font-black text-white transition hover:bg-[#580444]">
+              ver peças
+            </button>
+          </section>
+        </div>
+      }
     </div>
   `
 })
@@ -175,6 +220,22 @@ export class VitrineComponent implements OnInit {
   carregando = signal<boolean>(true);
   erroCarregamento = signal<boolean>(false);
   cartoesCarregando = [0, 1, 2, 3, 4, 5, 6, 7];
+  ajudaAberta = signal<boolean>(false);
+
+  passosAjuda = [
+    { titulo: 'Escolha sua peça', texto: 'Cada peça é única, de segunda mão, com fotos e descrição reais.' },
+    { titulo: 'Reserve na sacola', texto: 'A peça fica separada para você por 15 minutos.' },
+    { titulo: 'Finalize o pedido', texto: 'Informe seu nome, WhatsApp e endereço.' },
+    { titulo: 'Combine pelo WhatsApp', texto: 'Confirmamos o pagamento e a entrega, e a peça é sua.' }
+  ];
+
+  // Respostas provisórias: ajustar com as regras reais do bazar.
+  faqAjuda = [
+    { pergunta: 'O que acontece se eu não finalizar em 15 minutos?', resposta: 'A reserva expira e a peça volta para a vitrine para outras clientes.' },
+    { pergunta: 'Como é o pagamento?', resposta: 'Combinamos o pagamento pelo WhatsApp depois que você faz o pedido. A peça fica reservada até a confirmação.' },
+    { pergunta: 'Como é o frete?', resposta: '[definir] O valor e o prazo são combinados pelo WhatsApp.' },
+    { pergunta: 'Posso trocar ou devolver?', resposta: '[definir] Política de troca e devolução do bazar.' }
+  ];
 
   ngOnInit(): void {
     this.carregarDados();
@@ -213,7 +274,12 @@ export class VitrineComponent implements OnInit {
   }
 
   exibirAjuda(): void {
-    alert("✨ Peças únicas! Clicou em comprar, o item fica reservado por 15 minutos na sua sacola.");
+    this.ajudaAberta.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  fecharAjuda(): void {
+    this.ajudaAberta.set(false);
   }
 
   irParaAdmin(): void {
