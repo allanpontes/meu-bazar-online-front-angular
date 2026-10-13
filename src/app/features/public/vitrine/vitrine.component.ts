@@ -124,7 +124,7 @@ import { SacolaService } from '../../../core/services/sacola.service';
                     </div>
                   } @else if (produto.status === 'Reservado') {
                     <div class="mt-2 rounded-lg border border-slate-100 bg-slate-50 p-2 text-center text-xxs font-bold text-slate-500">
-                      Reservada por outra pessoa
+                      Peça reservada
                     </div>
                   }
 
@@ -135,7 +135,7 @@ import { SacolaService } from '../../../core/services/sacola.service';
                         <span class="h-3 w-3 animate-spin rounded-full border-2 border-[#580444]/30 border-t-[#580444]" aria-hidden="true"></span>
                         reservando...
                       } @else {
-                        {{ produto.status === 'Disponivel' ? 'comprar' : (sacola.contemProduto(produto.id) ? 'na sacola' : 'reservado') }}
+                        {{ produto.status === 'Disponivel' ? 'comprar' : (sacola.contemProduto(produto.id) ? 'na sacola' : 'reservada') }}
                       }
                     </button>
                   </div>
