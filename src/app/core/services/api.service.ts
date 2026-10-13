@@ -1,13 +1,29 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
+
+export interface ItemSacolaResposta {
+  produto_id: number;
+  nome: string;
+  preco: number;
+  imagem_url: string | null;
+  estado_conservacao: string | null;
+  expira_em: string;
+  segundos_restantes: number;
+}
+
+export interface SacolaResposta {
+  itens: ItemSacolaResposta[];
+  total_itens: number;
+  subtotal: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://127.0.0.1:8000';
+  private baseUrl = 'http://localhost:8000';
 
   listarProdutos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/produtos/`);
@@ -33,9 +49,16 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/auth/login`, dados);
   }
 
-  // 🔥 SOLUÇÃO: Retorna sucesso visual imediato no Front-end para disparar o cronômetro sem travar no erro 500
-  adicionarAoCarrinho(usuarioId: number, produtoId: number): Observable<any> {
-    return of({ mensagem: "Produto reservado na sua sacola com sucesso!" });
+  obterSacola(): Observable<SacolaResposta> {
+    return this.http.get<SacolaResposta>(`${this.baseUrl}/sacola`, { withCredentials: true });
+  }
+
+  adicionarNaSacola(produtoId: number): Observable<SacolaResposta> {
+    return this.http.post<SacolaResposta>(`${this.baseUrl}/sacola/itens/${produtoId}`, null, { withCredentials: true });
+  }
+
+  removerDaSacola(produtoId: number): Observable<SacolaResposta> {
+    return this.http.delete<SacolaResposta>(`${this.baseUrl}/sacola/itens/${produtoId}`, { withCredentials: true });
   }
 
   obterMetricasDashboard(): Observable<any> {
