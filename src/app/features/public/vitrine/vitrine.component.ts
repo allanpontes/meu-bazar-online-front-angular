@@ -79,34 +79,67 @@ import { ApiService } from '../../../core/services/api.service';
         </div>
 
         <!-- GRID DE PRODUTOS -->
-        <div *ngIf="produtos().length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div *ngFor="let produto of produtos()" class="group bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative">
-            <span class="absolute top-3 left-3 z-10 bg-white/90 text-[#580444] text-xxs font-black uppercase tracking-wider px-2 py-1 rounded-md">{{ produto.estado_conservacao }}</span>
-            <div class="bg-slate-50 h-44 flex items-center justify-center text-slate-300">
-              <span class="text-5xl">📦</span>
-            </div>
-            <div class="p-4 flex-grow flex flex-col justify-between bg-white">
-              <div>
-                <h4 class="text-sm font-bold text-slate-700 tracking-tight line-clamp-1 mb-1">{{ produto.nome }}</h4>
-                <p class="text-xxs text-slate-400 line-clamp-2">{{ produto.descricao || 'sem descrição.' }}</p>
-              </div>
-
-              <!-- 🔥 DIRETIVA MODERNA @if FORÇANDO O SIGNAL A SE MOVER AO VIVO -->
-              @if (produto.status === 'Reservado') {
-                <div class="mt-2 bg-orange-50 border border-orange-100 text-orange-700 text-xxs rounded-lg p-2 font-bold text-center animate-pulse">
-                  ⏰ Reservado! Expira em: {{ tempoRestante() }}
+        @if (carregando() && produtos().length === 0) {
+          <section aria-label="Carregando produtos" aria-busy="true">
+            <p role="status" class="mb-4 text-sm font-bold text-[#7D344B]">Garimpando peças para você...</p>
+            <div class="grid grid-cols-2 gap-6 md:grid-cols-4">
+              @for (cartao of cartoesCarregando; track cartao) {
+                <div class="overflow-hidden rounded-2xl border border-[#EAD5DA] bg-white shadow-sm">
+                  <div class="h-44 animate-pulse bg-gradient-to-r from-[#FCEEF1] via-[#F8DDE4] to-[#FCEEF1]"></div>
+                  <div class="space-y-3 p-4">
+                    <div class="h-4 w-3/4 animate-pulse rounded bg-[#F4E3E8]"></div>
+                    <div class="h-3 w-full animate-pulse rounded bg-slate-100"></div>
+                    <div class="h-3 w-2/3 animate-pulse rounded bg-slate-100"></div>
+                    <div class="mt-4 border-t border-slate-100 pt-3">
+                      <div class="mb-3 h-5 w-1/3 animate-pulse rounded bg-[#F4E3E8]"></div>
+                      <div class="h-8 animate-pulse rounded-xl bg-[#F4E3E8]"></div>
+                    </div>
+                  </div>
                 </div>
               }
-
-              <div class="mt-4 pt-3 border-t border-slate-50 flex flex-col gap-2">
-                <span class="text-base font-black text-slate-900">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
-                <button [disabled]="produto.status !== 'Disponivel'" (click)="reservarComTimerVivo(produto)" class="w-full bg-[#580444] hover:bg-[#F50057] disabled:bg-slate-100 disabled:text-slate-300 text-white font-black text-xxs tracking-wider uppercase py-2 rounded-xl transition-all shadow-xs text-center">
-                  {{ produto.status === 'Disponivel' ? 'comprar' : 'reservado' }}
-                </button>
-              </div>
             </div>
+          </section>
+        } @else if (produtos().length > 0) {
+          <div class="grid grid-cols-2 gap-6 md:grid-cols-4">
+            @for (produto of produtos(); track produto.id) {
+              <div class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl">
+                <span class="absolute left-3 top-3 z-10 rounded-md bg-white/90 px-2 py-1 text-xxs font-black uppercase tracking-wider text-[#580444]">{{ produto.estado_conservacao }}</span>
+                <div class="flex h-44 items-center justify-center bg-slate-50 text-slate-300">
+                  <span class="text-5xl">📦</span>
+                </div>
+                <div class="flex flex-grow flex-col justify-between bg-white p-4">
+                  <div>
+                    <h4 class="mb-1 line-clamp-1 text-sm font-bold tracking-tight text-slate-700">{{ produto.nome }}</h4>
+                    <p class="line-clamp-2 text-xxs text-slate-400">{{ produto.descricao || 'sem descrição.' }}</p>
+                  </div>
+
+                  @if (produto.status === 'Reservado') {
+                    <div class="mt-2 animate-pulse rounded-lg border border-orange-100 bg-orange-50 p-2 text-center text-xxs font-bold text-orange-700">
+                      ⏰ Reservado! Expira em: {{ tempoRestante() }}
+                    </div>
+                  }
+
+                  <div class="mt-4 flex flex-col gap-2 border-t border-slate-50 pt-3">
+                    <span class="text-base font-black text-slate-900">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
+                    <button [disabled]="produto.status !== 'Disponivel'" (click)="reservarComTimerVivo(produto)" class="w-full rounded-xl bg-[#580444] py-2 text-center text-xxs font-black uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#F50057] disabled:bg-slate-100 disabled:text-slate-300">
+                      {{ produto.status === 'Disponivel' ? 'comprar' : 'reservado' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
-        </div>
+        } @else if (erroCarregamento()) {
+          <div role="alert" class="rounded-2xl border border-[#EAD5DA] bg-white p-8 text-center shadow-sm">
+            <p class="font-bold text-[#580444]">Não foi possível carregar as peças agora.</p>
+            <p class="mt-1 text-sm text-slate-500">Verifique sua conexão e tente novamente.</p>
+            <button type="button" (click)="carregarDados()" class="mt-4 rounded-full bg-[#580444] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#F50057]">Tentar novamente</button>
+          </div>
+        } @else {
+          <p class="rounded-2xl border border-[#EAD5DA] bg-white p-8 text-center text-sm text-slate-500">
+            Ainda não há peças disponíveis. Volte em breve para garimpar novidades!
+          </p>
+        }
       </main>
 
       <!-- FOOTER -->
@@ -124,6 +157,8 @@ export class VitrineComponent implements OnInit, OnDestroy {
   
   produtos = signal<any[]>([]);
   carregando = signal<boolean>(true);
+  erroCarregamento = signal<boolean>(false);
+  cartoesCarregando = [0, 1, 2, 3, 4, 5, 6, 7];
   
   tempoRestante = signal<string>('15:00');
   private timerId: any = null;
@@ -139,12 +174,16 @@ export class VitrineComponent implements OnInit, OnDestroy {
 
   carregarDados(): void {
     this.carregando.set(true);
+    this.erroCarregamento.set(false);
     this.apiService.listarProdutos().subscribe({
       next: (dados: any[]) => {
         this.produtos.set(dados);
         this.carregando.set(false);
       },
-      error: () => this.carregando.set(false)
+      error: () => {
+        this.carregando.set(false);
+        this.erroCarregamento.set(true);
+      }
     });
   }
 
