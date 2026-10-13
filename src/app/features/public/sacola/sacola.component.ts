@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SacolaService } from '../../../core/services/sacola.service';
+import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.component';
 
 @Component({
   selector: 'app-sacola',
   standalone: true,
-  imports: [CurrencyPipe, RouterLink],
+  imports: [CurrencyPipe, RouterLink, AvisoSacolaComponent],
   template: `
     <div class="min-h-screen bg-[#FFFDF9] font-sans antialiased text-slate-800">
       <header class="border-b border-slate-100 bg-white px-6 py-4 shadow-sm">
@@ -68,6 +69,8 @@ import { SacolaService } from '../../../core/services/sacola.service';
           </div>
         }
       </main>
+
+      <app-aviso-sacola />
     </div>
   `
 })
