@@ -17,9 +17,18 @@ import { ApiService } from '../../../core/services/api.service';
       <!-- 🌐 NAVBAR ESTILO ENJOEI -->
       <nav class="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-50 shadow-sm">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div class="flex items-center gap-2.5 cursor-pointer" (click)="recarregarVitrine()">
-            <div class="bg-[#F50057] text-white w-10 h-10 rounded-full flex items-center justify-center font-black text-xl shadow-md">b</div>
-            <span class="text-xl font-black tracking-tight text-[#580444]">meu bazar.</span>
+          <div class="flex cursor-pointer items-center gap-2.5" (click)="recarregarVitrine()">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center" aria-hidden="true">
+              <svg class="h-12 w-12 drop-shadow-sm" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 5h4v6l2 2 2-2V5h4l4 9 7 6-5 5-4-3v7l7 13H9l7-13v-7l-4 3-5-5 7-6 4-9Z" fill="#F50057" stroke="#580444" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M22 5c0 2 1 3 2 3s2-1 2-3M17 29h14M20 34h8" stroke="#FFFDF9" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="m40 7 .8 2.2L43 10l-2.2.8L40 13l-.8-2.2L37 10l2.2-.8L40 7Z" fill="#F50057"/>
+              </svg>
+            </div>
+            <div class="leading-none" aria-label="Elas no Closet">
+              <span class="block text-[9px] font-black uppercase tracking-[0.28em] text-[#F50057]">elas no</span>
+              <span class="mt-0.5 block font-serif text-2xl font-bold leading-none tracking-tight text-[#580444]">closet</span>
+            </div>
           </div>
 
           <div class="w-full md:max-w-md relative flex items-center">
@@ -42,13 +51,31 @@ import { ApiService } from '../../../core/services/api.service';
 
       <!-- ⚡ MAIN -->
       <main class="flex-grow max-w-6xl w-full mx-auto px-6 py-8">
-        <div class="bg-gradient-to-r from-[#FBC5D2] to-[#FFE3E8] rounded-3xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between border border-[#F5B1C1] shadow-sm relative">
-          <div class="space-y-3 z-10 text-center md:text-left">
-            <div class="bg-[#580444] text-white text-xs font-black px-3 py-1 rounded-md inline-block uppercase tracking-widest shadow-sm">Sua última chance</div>
-            <h2 class="text-3xl md:text-4xl font-black text-[#580444] tracking-tight leading-none">10.10 DEIXOU <br/> CUPONS!</h2>
-            <p class="text-xs font-bold text-[#7D344B]">não vá sair daqui de mãos abanando, pois corre!</p>
+        <div class="relative isolate mb-12 flex flex-col items-center justify-between overflow-hidden rounded-3xl border border-[#F5B1C1] bg-gradient-to-r from-[#FBC5D2] to-[#FFE3E8] p-5 shadow-sm md:flex-row md:p-6">
+          <div class="z-10 space-y-3 text-center md:text-left">
+            <div class="inline-block rounded-md bg-[#580444] px-3 py-1 text-xs font-black uppercase tracking-widest text-white shadow-sm">Elas no Closet</div>
+            <h2 class="text-3xl font-black leading-tight tracking-tight text-[#580444] md:text-4xl">Seu próximo look<br />está aqui.</h2>
+            <p class="text-sm font-bold text-[#7D344B]">Garimpe peças únicas e dê um novo ciclo às suas roupas favoritas.</p>
           </div>
-          <div class="mt-6 md:mt-0 text-7xl select-none filter drop-shadow-md animate-bounce">🐮</div>
+          <div class="mt-4 flex w-full max-w-[220px] items-center justify-center md:mt-0 md:w-2/5 md:max-w-[260px]" aria-hidden="true">
+            <svg class="h-32 w-auto max-w-full drop-shadow-sm md:h-40" viewBox="0 0 300 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="153" cy="101" r="82" fill="white" fill-opacity=".42"/>
+              <circle cx="247" cy="45" r="13" fill="#F50057" fill-opacity=".18"/>
+              <path d="m247 19 2.7 7.3L257 29l-7.3 2.7L247 39l-2.7-7.3L237 29l7.3-2.7L247 19Z" fill="#F50057" fill-opacity=".65"/>
+
+              <path d="M73 55c0-7 11-7 11 0L45 77l34 19 34-19-39-22Z" fill="#FFFDF9" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="m48 80-15 8 10 15 9-6v43h54v-43l9 6 10-15-15-8-14-6c-4 9-10 13-18 13s-14-4-18-13l-12 6Z" fill="#F8AFC1" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M67 73c3 8 8 12 15 12s12-4 15-12" stroke="#580444" stroke-width="2.5" stroke-linecap="round"/>
+
+              <path d="M151 48c0-7 11-7 11 0l-39 22 34 19 34-19-40-22Z" fill="#FFFDF9" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M145 70h23l6 40c-6 4-28 4-35 0l6-40Z" fill="#FFFDF9" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="m139 110 12 3 6 34h-43l25-37Zm35 0-12 3-6 34h43l-25-37Z" fill="#F50057" fill-opacity=".78" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+
+              <path d="M231 58c0-7 11-7 11 0l-39 22 34 19 34-19-40-22Z" fill="#FFFDF9" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M211 81h52l-4 20-8 46h-20l-2-38-6 38h-20l-4-46-4-20Z" fill="#7D344B" fill-opacity=".88" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M211 93h51M236 109h15" stroke="#FFFDF9" stroke-width="2" stroke-linecap="round" stroke-opacity=".8"/>
+            </svg>
+          </div>
         </div>
 
         <!-- GRID DE PRODUTOS -->
@@ -85,7 +112,7 @@ import { ApiService } from '../../../core/services/api.service';
       <!-- FOOTER -->
       <footer class="bg-slate-50 border-t border-slate-200 py-10 px-6 mt-20 text-xs text-slate-400">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <span class="font-black text-[#580444] text-sm">meu bazar.</span>
+          <span class="font-serif text-lg font-bold text-[#580444]">elas no closet</span>
           <span class="text-emerald-600">🔒 ambiente seguro</span>
         </div>
       </footer>

@@ -6,11 +6,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/public/vitrine/vitrine.component').then(m => m.VitrineComponent)
   },
   {
-    path: 'admin/estoque',
-    loadComponent: () => import('./features/admin/estoque/estoque.component').then(m => m.EstoqueComponent)
-  },
-  {
     path: 'admin',
-    loadComponent: () => import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    loadComponent: () => import('./features/admin/admin-layout.component').then(m => m.AdminLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/admin/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'estoque',
+        loadComponent: () => import('./features/admin/estoque/estoque.component').then(m => m.EstoqueComponent)
+      }
+    ]
   }
 ];

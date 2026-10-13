@@ -1,110 +1,118 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-estoque',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   template: `
-    <div class="min-h-screen bg-slate-900 text-slate-100 font-sans">
-      <header class="bg-slate-950 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
-        <h1 class="text-lg font-black tracking-tight uppercase text-amber-400">Estoque</h1>
-        <a routerLink="/admin" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl">⬅️ Dashboard</a>
-      </header>
+    <main class="mx-auto w-full max-w-6xl px-6 py-8">
+      <div class="mb-6">
+        <p class="mb-2 text-xs font-black uppercase tracking-[0.2em] text-[#F50057]">Catálogo da loja</p>
+        <h1 class="text-2xl font-black tracking-tight text-[#580444] md:text-3xl">Estoque</h1>
+        <p class="mt-2 text-sm text-slate-500">Cadastre, atualize e acompanhe os produtos disponíveis no bazar.</p>
+      </div>
 
-      <main class="max-w-xl mx-auto px-6 py-8">
-        <h2 class="text-2xl font-black mb-6">{{ editandoId() ? 'Editar produto #' + editandoId() : 'Cadastrar produto' }}</h2>
+      <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <section class="rounded-3xl border border-[#EAD5DA] bg-white p-5 shadow-sm md:p-7">
+          <h2 class="mb-1 text-lg font-black text-[#580444]">{{ editandoId() ? 'Editar produto #' + editandoId() : 'Cadastrar produto' }}</h2>
+          <p class="mb-6 text-sm text-slate-500">Os campos com * são obrigatórios.</p>
 
-        <form [formGroup]="form" (ngSubmit)="salvar()" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-400 mb-1" for="nome">Nome *</label>
-            <input id="nome" formControlName="nome" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" />
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-400 mb-1" for="descricao">Descrição</label>
-            <textarea id="descricao" formControlName="descricao" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2"></textarea>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
+          <form [formGroup]="form" (ngSubmit)="salvar()" class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1" for="preco">Preço (R$) *</label>
-              <input id="preco" type="number" step="0.01" formControlName="preco" (wheel)="$any($event.target).blur()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" />
+              <label class="mb-1 block text-xs font-bold text-slate-600" for="nome">Nome *</label>
+              <input id="nome" formControlName="nome" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10" />
             </div>
+
             <div>
-              <label class="block text-xs font-bold text-slate-400 mb-1" for="estoque">Estoque</label>
-              <input id="estoque" type="number" formControlName="estoque" (wheel)="$any($event.target).blur()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" />
+              <label class="mb-1 block text-xs font-bold text-slate-600" for="descricao">Descrição</label>
+              <textarea id="descricao" formControlName="descricao" rows="3" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10"></textarea>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-400 mb-1" for="estado">Estado de conservação *</label>
-            <select id="estado" formControlName="estado_conservacao" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
-              <option value="Novo">Novo</option>
-              <option value="Semi-novo">Semi-novo</option>
-              <option value="Bom">Bom</option>
-              <option value="Usado">Usado</option>
-            </select>
-          </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label class="mb-1 block text-xs font-bold text-slate-600" for="preco">Preço (R$) *</label>
+                <input id="preco" type="number" step="0.01" formControlName="preco" (wheel)="$any($event.target).blur()" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10" />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-bold text-slate-600" for="estoque">Quantidade em estoque</label>
+                <input id="estoque" type="number" formControlName="estoque" (wheel)="$any($event.target).blur()" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10" />
+              </div>
+            </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-400 mb-1" for="imagem">URL da imagem</label>
-            <input id="imagem" formControlName="imagem_url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" />
-          </div>
+            <div>
+              <label class="mb-1 block text-xs font-bold text-slate-600" for="estado">Estado de conservação *</label>
+              <select id="estado" formControlName="estado_conservacao" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10">
+                <option value="Novo">Novo</option>
+                <option value="Semi-novo">Semi-novo</option>
+                <option value="Bom">Bom</option>
+                <option value="Usado">Usado</option>
+              </select>
+            </div>
 
-          @if (mensagem()) {
-            <p class="text-sm" [class.text-emerald-400]="!erro()" [class.text-red-400]="erro()">{{ mensagem() }}</p>
-          }
+            <div>
+              <label class="mb-1 block text-xs font-bold text-slate-600" for="imagem">URL da imagem</label>
+              <input id="imagem" formControlName="imagem_url" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10" />
+            </div>
 
-          <button type="submit" [disabled]="form.invalid || enviando()" class="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-slate-900 font-black uppercase text-sm py-3 rounded-xl">
-            {{ enviando() ? 'Salvando...' : (editandoId() ? 'Salvar alterações' : 'Cadastrar produto') }}
-          </button>
-          @if (editandoId()) {
-            <button type="button" (click)="cancelarEdicao()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm py-3 rounded-xl">
-              Cancelar edição
+            @if (mensagem()) {
+              <p class="text-sm font-medium" [class.text-emerald-700]="!erro()" [class.text-red-600]="erro()">{{ mensagem() }}</p>
+            }
+
+            <button type="submit" [disabled]="form.invalid || enviando()" class="w-full rounded-xl bg-[#580444] py-3 text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#F50057] disabled:cursor-not-allowed disabled:opacity-40">
+              {{ enviando() ? 'Salvando...' : (editandoId() ? 'Salvar alterações' : 'Cadastrar produto') }}
             </button>
-          }
-        </form>
+            @if (editandoId()) {
+              <button type="button" (click)="cancelarEdicao()" class="w-full rounded-xl border border-[#EAD5DA] bg-white py-3 text-sm font-bold text-[#580444] transition hover:bg-[#FFF8FA]">
+                Cancelar edição
+              </button>
+            }
+          </form>
+        </section>
 
-        <h2 class="text-2xl font-black mt-12 mb-4">Produtos cadastrados</h2>
-
-        @if (carregando()) {
-          <p class="text-sm text-slate-400">Carregando produtos...</p>
-        } @else if (produtos().length === 0) {
-          <p class="text-sm text-slate-400">Nenhum produto cadastrado.</p>
-        } @else {
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-              <thead class="text-xs uppercase text-slate-400 border-b border-slate-800">
-                <tr>
-                  <th class="py-2 pr-3">Nome</th>
-                  <th class="py-2 pr-3">Preço</th>
-                  <th class="py-2 pr-3">Estoque</th>
-                  <th class="py-2 pr-3">Status</th>
-                  <th class="py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (p of produtos(); track p.id) {
-                  <tr class="border-b border-slate-800/60">
-                    <td class="py-2 pr-3">{{ p.nome }}</td>
-                    <td class="py-2 pr-3">R$ {{ p.preco.toFixed(2) }}</td>
-                    <td class="py-2 pr-3">{{ p.estoque }}</td>
-                    <td class="py-2 pr-3">{{ p.status }}</td>
-                    <td class="py-2 text-right whitespace-nowrap">
-                      <button type="button" (click)="editar(p)" class="text-xs text-amber-400 hover:underline mr-3">Editar</button>
-                      <button type="button" (click)="excluir(p)" class="text-xs text-red-400 hover:underline">Excluir</button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+        <section class="rounded-3xl border border-[#EAD5DA] bg-white p-5 shadow-sm md:p-7">
+          <div class="mb-5">
+            <h2 class="text-lg font-black text-[#580444]">Produtos cadastrados</h2>
+            <p class="mt-1 text-sm text-slate-500">Gerencie os produtos que aparecem na vitrine.</p>
           </div>
-        }
-      </main>
-    </div>
+
+          @if (carregando()) {
+            <p class="rounded-xl bg-[#FFF8FA] p-4 text-sm text-slate-500">Carregando produtos...</p>
+          } @else if (produtos().length === 0) {
+            <p class="rounded-xl bg-[#FFF8FA] p-4 text-sm text-slate-500">Nenhum produto cadastrado.</p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[520px] text-left text-sm">
+                <thead class="border-b border-[#EAD5DA] text-xs uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th class="py-3 pr-3">Nome</th>
+                    <th class="py-3 pr-3">Preço</th>
+                    <th class="py-3 pr-3">Estoque</th>
+                    <th class="py-3 pr-3">Status</th>
+                    <th class="py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of produtos(); track p.id) {
+                    <tr class="border-b border-slate-100 last:border-0">
+                      <td class="py-3 pr-3 font-bold text-slate-700">{{ p.nome }}</td>
+                      <td class="whitespace-nowrap py-3 pr-3">R$ {{ p.preco.toFixed(2) }}</td>
+                      <td class="py-3 pr-3">{{ p.estoque }}</td>
+                      <td class="py-3 pr-3">{{ p.status }}</td>
+                      <td class="whitespace-nowrap py-3 text-right">
+                        <button type="button" (click)="editar(p)" class="mr-3 text-xs font-bold text-[#580444] hover:text-[#F50057] hover:underline">Editar</button>
+                        <button type="button" (click)="excluir(p)" class="text-xs font-bold text-red-600 hover:underline">Excluir</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      </div>
+    </main>
   `
 })
 export class EstoqueComponent implements OnInit {
