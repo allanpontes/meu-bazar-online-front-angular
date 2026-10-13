@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
+import { SacolaService } from '../../../core/services/sacola.service';
 
 @Component({
   selector: 'app-vitrine',
@@ -40,10 +42,10 @@ import { ApiService } from '../../../core/services/api.service';
             <span (click)="exibirAjuda()" class="hover:text-[#F50057] cursor-pointer">como funciona?</span>
             <span (click)="irParaAdmin()" class="hover:text-[#F50057] cursor-pointer text-amber-600">⚙️ painel gerente</span>
             
-            <button class="bg-[#580444] text-white px-5 py-2.5 rounded-full shadow-md flex items-center gap-2">
+            <button type="button" (click)="irParaSacola()" class="bg-[#580444] text-white px-5 py-2.5 rounded-full shadow-md flex items-center gap-2 transition hover:bg-[#F50057]">
               <span>🛒</span>
               <span class="text-xs uppercase tracking-wider font-extrabold">sacola</span>
-              <span class="bg-white text-[#580444] text-xs font-black px-2 py-0.5 rounded-full">{{ totalSacola() }}</span>
+              <span class="bg-white text-[#580444] text-xs font-black px-2 py-0.5 rounded-full">{{ sacola.totalItens() }}</span>
             </button>
           </div>
         </div>
@@ -51,6 +53,9 @@ import { ApiService } from '../../../core/services/api.service';
 
       <!-- ⚡ MAIN -->
       <main class="flex-grow max-w-6xl w-full mx-auto px-6 py-8">
+        @if (sacola.erro(); as erro) {
+          <p role="alert" class="mb-4 rounded-xl border border-[#F5B1C1] bg-[#FFE3E8] p-3 text-sm font-bold text-[#7D344B]">{{ erro }}</p>
+        }
         <div class="relative isolate mb-12 flex flex-col items-center justify-between overflow-hidden rounded-3xl border border-[#F5B1C1] bg-gradient-to-r from-[#FBC5D2] to-[#FFE3E8] p-5 shadow-sm md:flex-row md:p-6">
           <div class="z-10 space-y-3 text-center md:text-left">
             <div class="inline-block rounded-md bg-[#580444] px-3 py-1 text-xs font-black uppercase tracking-widest text-white shadow-sm">Elas no Closet</div>
@@ -113,16 +118,25 @@ import { ApiService } from '../../../core/services/api.service';
                     <p class="line-clamp-2 text-xxs text-slate-400">{{ produto.descricao || 'sem descrição.' }}</p>
                   </div>
 
-                  @if (produto.status === 'Reservado') {
-                    <div class="mt-2 animate-pulse rounded-lg border border-orange-100 bg-orange-50 p-2 text-center text-xxs font-bold text-orange-700">
-                      ⏰ Reservado! Expira em: {{ tempoRestante() }}
+                  @if (sacola.contemProduto(produto.id)) {
+                    <div class="mt-2 rounded-lg border border-orange-100 bg-orange-50 p-2 text-center text-xxs font-bold text-orange-700">
+                      ⏰ Na sua sacola! Expira em: {{ tempoDoProduto(produto.id) }}
+                    </div>
+                  } @else if (produto.status === 'Reservado') {
+                    <div class="mt-2 rounded-lg border border-slate-100 bg-slate-50 p-2 text-center text-xxs font-bold text-slate-500">
+                      Reservada por outra pessoa
                     </div>
                   }
 
                   <div class="mt-4 flex flex-col gap-2 border-t border-slate-50 pt-3">
                     <span class="text-base font-black text-slate-900">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
-                    <button [disabled]="produto.status !== 'Disponivel'" (click)="reservarComTimerVivo(produto)" class="w-full rounded-xl bg-[#580444] py-2 text-center text-xxs font-black uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#F50057] disabled:bg-slate-100 disabled:text-slate-300">
-                      {{ produto.status === 'Disponivel' ? 'comprar' : 'reservado' }}
+                    <button [disabled]="produto.status !== 'Disponivel' || sacola.estaProcessando(produto.id)" [attr.aria-busy]="sacola.estaProcessando(produto.id)" (click)="reservar(produto)" class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#580444] py-2 text-center text-xxs font-black uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#F50057] disabled:bg-slate-100 disabled:text-slate-300">
+                      @if (sacola.estaProcessando(produto.id)) {
+                        <span class="h-3 w-3 animate-spin rounded-full border-2 border-[#580444]/30 border-t-[#580444]" aria-hidden="true"></span>
+                        reservando...
+                      } @else {
+                        {{ produto.status === 'Disponivel' ? 'comprar' : (sacola.contemProduto(produto.id) ? 'na sacola' : 'reservado') }}
+                      }
                     </button>
                   </div>
                 </div>
@@ -152,24 +166,18 @@ import { ApiService } from '../../../core/services/api.service';
     </div>
   `
 })
-export class VitrineComponent implements OnInit, OnDestroy {
+export class VitrineComponent implements OnInit {
   private apiService = inject(ApiService);
+  private router = inject(Router);
+  sacola = inject(SacolaService);
   
   produtos = signal<any[]>([]);
   carregando = signal<boolean>(true);
   erroCarregamento = signal<boolean>(false);
   cartoesCarregando = [0, 1, 2, 3, 4, 5, 6, 7];
-  
-  tempoRestante = signal<string>('15:00');
-  private timerId: any = null;
-  totalSacola = signal<number>(0);
 
   ngOnInit(): void {
     this.carregarDados();
-  }
-
-  ngOnDestroy(): void {
-    if (this.timerId) clearInterval(this.timerId);
   }
 
   carregarDados(): void {
@@ -191,38 +199,17 @@ export class VitrineComponent implements OnInit, OnDestroy {
     this.carregarDados();
   }
 
-  reservarComTimerVivo(produto: any): void {
-    this.totalSacola.set(this.totalSacola() + 1);
-    produto.status = 'Reservado';
-    this.iniciarContagemRegressiva();
-    
-    this.apiService.adicionarAoCarrinho(1, produto.id).subscribe({
-      error: () => console.log("Log: Evento de clique processado.")
-    });
+  reservar(produto: any): void {
+    this.sacola.adicionar(produto.id, () => this.carregarDados());
   }
 
-  iniciarContagemRegressiva(): void {
-    if (this.timerId) clearInterval(this.timerId);
-    let totalSegundos = 15 * 60;
+  tempoDoProduto(produtoId: number): string {
+    const item = this.sacola.itens().find(i => i.produto_id === produtoId);
+    return item ? this.sacola.formatarTempo(this.sacola.segundosRestantes(item)) : '00:00';
+  }
 
-    this.timerId = setInterval(() => {
-      totalSegundos--;
-      
-      if (totalSegundos <= 0) {
-        clearInterval(this.timerId);
-        this.tempoRestante.set('00:00');
-        this.carregarDados();
-        return;
-      }
-
-      const minutos = Math.floor(totalSegundos / 60);
-      const segundos = totalSegundos % 60;
-      
-      // Altera o valor do Signal. O bloco @if vai forçar a tela a piscar os segundos!
-      this.tempoRestante.set(
-        `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`
-      );
-    }, 1000);
+  irParaSacola(): void {
+    this.router.navigate(['/sacola']);
   }
 
   exibirAjuda(): void {
