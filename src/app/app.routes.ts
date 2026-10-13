@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/public/sacola/sacola.component').then(m => m.SacolaComponent)
   },
   {
+    path: 'checkout',
+    loadComponent: () => import('./features/public/checkout/checkout.component').then(m => m.CheckoutComponent)
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./features/admin/admin-layout.component').then(m => m.AdminLayoutComponent),
     children: [
@@ -20,6 +24,10 @@ export const routes: Routes = [
       {
         path: 'estoque',
         loadComponent: () => import('./features/admin/estoque/estoque.component').then(m => m.EstoqueComponent)
+      },
+      {
+        path: 'pedidos',
+        loadComponent: () => import('./features/admin/pedidos/pedidos-admin.component').then(m => m.PedidosAdminComponent)
       }
     ]
   }

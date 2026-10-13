@@ -48,6 +48,16 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
               Estoque
             </a>
             <a
+              routerLink="/admin/pedidos"
+              routerLinkActive="bg-[#580444] text-white shadow-sm"
+              [routerLinkActiveOptions]="{ exact: true }"
+              [attr.aria-current]="pedidosLink.isActive ? 'page' : null"
+              #pedidosLink="routerLinkActive"
+              class="rounded-full px-4 py-2 text-sm font-bold text-[#580444] transition-colors hover:bg-[#F4E3E8]"
+            >
+              Pedidos
+            </a>
+            <a
               routerLink="/"
               class="rounded-full border border-[#EAD5DA] px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:border-[#F50057] hover:text-[#F50057]"
             >

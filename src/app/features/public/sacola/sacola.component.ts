@@ -64,7 +64,7 @@ import { SacolaService } from '../../../core/services/sacola.service';
               <span class="text-sm font-bold text-[#7D344B]">Subtotal ({{ sacola.totalItens() }} {{ sacola.totalItens() === 1 ? 'peça' : 'peças' }})</span>
               <span class="text-2xl font-black text-[#580444]">{{ sacola.subtotal() | currency:'BRL':'symbol':'1.2-2' }}</span>
             </div>
-            <button type="button" disabled class="mt-4 w-full rounded-xl bg-slate-100 py-3 text-sm font-black uppercase tracking-wider text-slate-400">finalizar compra (em breve)</button>
+            <a routerLink="/checkout" class="mt-4 block w-full rounded-xl bg-[#580444] py-3 text-center text-sm font-black uppercase tracking-wider text-white transition hover:bg-[#F50057]">finalizar compra</a>
           </div>
         }
       </main>

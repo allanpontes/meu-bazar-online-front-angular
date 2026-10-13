@@ -18,6 +18,22 @@ export interface SacolaResposta {
   subtotal: number;
 }
 
+export type StatusPedido = 'AguardandoPagamento' | 'Pago' | 'Cancelado';
+
+export interface NovoPedido {
+  nome_cliente: string;
+  whatsapp: string;
+  endereco: string;
+}
+
+export interface Pedido extends NovoPedido {
+  id: number;
+  subtotal: number;
+  status: StatusPedido;
+  criado_em: string;
+  itens: { produto_id: number | null; nome: string; preco: number }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -59,6 +75,23 @@ export class ApiService {
 
   removerDaSacola(produtoId: number): Observable<SacolaResposta> {
     return this.http.delete<SacolaResposta>(`${this.baseUrl}/sacola/itens/${produtoId}`, { withCredentials: true });
+  }
+
+  criarPedido(dados: NovoPedido): Observable<Pedido> {
+    return this.http.post<Pedido>(`${this.baseUrl}/pedidos`, dados, { withCredentials: true });
+  }
+
+  listarPedidos(chaveAdmin: string, status?: StatusPedido): Observable<Pedido[]> {
+    return this.http.get<Pedido[]>(`${this.baseUrl}/pedidos`, {
+      headers: { 'X-Admin-Key': chaveAdmin },
+      params: status ? { status_pedido: status } : {}
+    });
+  }
+
+  atualizarStatusPedido(id: number, status: 'Pago' | 'Cancelado', chaveAdmin: string): Observable<Pedido> {
+    return this.http.put<Pedido>(`${this.baseUrl}/pedidos/${id}/status`, { status }, {
+      headers: { 'X-Admin-Key': chaveAdmin }
+    });
   }
 
   obterMetricasDashboard(): Observable<any> {
