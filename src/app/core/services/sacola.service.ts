@@ -23,12 +23,17 @@ export class SacolaService implements OnDestroy {
   readonly itens = this.itensBrutos.asReadonly();
   readonly totalItens = computed(() => this.itensBrutos().length);
 
+  readonly aviso = signal<{ tipo: 'adicionada' | 'removida'; nome: string } | null>(null);
+  readonly contadorAdicoes = signal(0);
+  private avisoTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     this.carregar();
   }
 
   ngOnDestroy(): void {
     this.pararRelogio();
+    this.fecharAviso();
   }
 
   carregar(): void {
@@ -53,6 +58,8 @@ export class SacolaService implements OnDestroy {
     this.api.adicionarNaSacola(produtoId).subscribe({
       next: resposta => {
         this.aplicar(resposta);
+        const item = resposta.itens.find(i => i.produto_id === produtoId);
+        this.anunciarAdicao(item?.nome ?? 'Peça');
         this.finalizar(produtoId, aoConcluir);
       },
       error: (e: HttpErrorResponse) => {
@@ -66,9 +73,11 @@ export class SacolaService implements OnDestroy {
     if (this.estaProcessando(produtoId)) return;
     this.erro.set(null);
     this.marcarProcessando(produtoId, true);
+    const nome = this.itensBrutos().find(i => i.produto_id === produtoId)?.nome ?? 'Peça';
     this.api.removerDaSacola(produtoId).subscribe({
       next: resposta => {
         this.aplicar(resposta);
+        this.anunciar('removida', nome);
         this.finalizar(produtoId, aoConcluir);
       },
       error: () => {
@@ -76,6 +85,25 @@ export class SacolaService implements OnDestroy {
         this.finalizar(produtoId, aoConcluir);
       }
     });
+  }
+
+  private anunciarAdicao(nome: string): void {
+    this.contadorAdicoes.update(n => n + 1);
+    this.anunciar('adicionada', nome);
+  }
+
+  private anunciar(tipo: 'adicionada' | 'removida', nome: string): void {
+    this.aviso.set({ tipo, nome });
+    if (this.avisoTimer) clearTimeout(this.avisoTimer);
+    this.avisoTimer = setTimeout(() => this.fecharAviso(), 2500);
+  }
+
+  fecharAviso(): void {
+    if (this.avisoTimer) {
+      clearTimeout(this.avisoTimer);
+      this.avisoTimer = null;
+    }
+    this.aviso.set(null);
   }
 
   private finalizar(produtoId: number, aoConcluir?: () => void): void {

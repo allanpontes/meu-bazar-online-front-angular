@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
 import { SacolaService } from '../../../core/services/sacola.service';
+import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.component';
 
 @Component({
   selector: 'app-vitrine',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvisoSacolaComponent],
   template: `
     <div class="min-h-screen bg-[#FFFDF9] flex flex-col font-sans antialiased text-slate-800">
       
@@ -17,9 +18,9 @@ import { SacolaService } from '../../../core/services/sacola.service';
       </div>
 
       <!-- 🌐 NAVBAR ESTILO ENJOEI -->
-      <nav class="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div class="flex cursor-pointer items-center gap-2.5" (click)="recarregarVitrine()">
+      <nav class="bg-white border-b border-slate-100 px-4 py-3 md:px-6 md:py-4 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+          <button type="button" class="flex cursor-pointer items-center gap-2.5 text-left" (click)="recarregarVitrine()" aria-label="Elas no Closet, recarregar vitrine">
             <div class="flex h-12 w-12 shrink-0 items-center justify-center" aria-hidden="true">
               <svg class="h-12 w-12 drop-shadow-sm" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 5h4v6l2 2 2-2V5h4l4 9 7 6-5 5-4-3v7l7 13H9l7-13v-7l-4 3-5-5 7-6 4-9Z" fill="#F50057" stroke="#580444" stroke-width="1.6" stroke-linejoin="round"/>
@@ -27,11 +28,11 @@ import { SacolaService } from '../../../core/services/sacola.service';
                 <path d="m40 7 .8 2.2L43 10l-2.2.8L40 13l-.8-2.2L37 10l2.2-.8L40 7Z" fill="#F50057"/>
               </svg>
             </div>
-            <div class="leading-none" aria-label="Elas no Closet">
+            <div class="leading-none">
               <span class="block text-[9px] font-black uppercase tracking-[0.28em] text-[#F50057]">elas no</span>
               <span class="mt-0.5 block font-serif text-2xl font-bold leading-none tracking-tight text-[#580444]">closet</span>
             </div>
-          </div>
+          </button>
 
           <div class="w-full md:max-w-md relative flex items-center">
             <input type="text" placeholder="busque desapegos por nome..." class="w-full bg-slate-50 border border-slate-200 rounded-full py-2.5 pl-5 pr-10 text-sm focus:outline-none focus:border-[#580444]" />
@@ -39,13 +40,15 @@ import { SacolaService } from '../../../core/services/sacola.service';
           </div>
 
           <div class="flex items-center gap-4 font-bold text-sm text-slate-600">
-            <span (click)="exibirAjuda()" class="hover:text-[#F50057] cursor-pointer">como funciona?</span>
-            <span (click)="irParaAdmin()" class="hover:text-[#F50057] cursor-pointer text-amber-600">⚙️ painel gerente</span>
+            <button type="button" (click)="exibirAjuda()" class="hover:text-[#F50057] cursor-pointer">como funciona?</button>
+            <button type="button" (click)="irParaAdmin()" class="hover:text-[#F50057] cursor-pointer text-amber-600">⚙️ painel gerente</button>
             
-            <button type="button" (click)="irParaSacola()" class="bg-[#580444] text-white px-5 py-2.5 rounded-full shadow-md flex items-center gap-2 transition hover:bg-[#F50057]">
-              <span>🛒</span>
+            <button type="button" (click)="irParaSacola()" [attr.aria-label]="'Abrir sacola, ' + sacola.totalItens() + ' itens'" class="bg-[#580444] text-white px-5 py-2.5 rounded-full shadow-md flex items-center gap-2 transition hover:bg-[#F50057]">
+              <span aria-hidden="true">🛒</span>
               <span class="text-xs uppercase tracking-wider font-extrabold">sacola</span>
-              <span class="bg-white text-[#580444] text-xs font-black px-2 py-0.5 rounded-full">{{ sacola.totalItens() }}</span>
+              @for (n of [sacola.contadorAdicoes()]; track n) {
+                <span class="bg-white text-[#580444] text-xs font-black px-2 py-0.5 rounded-full" [class.animar-contador]="n > 0">{{ sacola.totalItens() }}</span>
+              }
             </button>
           </div>
         </div>
@@ -105,42 +108,73 @@ import { SacolaService } from '../../../core/services/sacola.service';
             </div>
           </section>
         } @else if (produtos().length > 0) {
-          <div class="grid grid-cols-2 gap-6 md:grid-cols-4">
+          <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
             @for (produto of produtos(); track produto.id) {
-              <div class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl">
-                <span class="absolute left-3 top-3 z-10 rounded-md bg-white/90 px-2 py-1 text-xxs font-black uppercase tracking-wider text-[#580444]">{{ produto.estado_conservacao }}</span>
-                <div class="flex h-44 items-center justify-center bg-slate-50 text-slate-300">
-                  <span class="text-5xl">📦</span>
-                </div>
-                <div class="flex flex-grow flex-col justify-between bg-white p-4">
-                  <div>
-                    <h4 class="mb-1 line-clamp-1 text-sm font-bold tracking-tight text-slate-700">{{ produto.nome }}</h4>
-                    <p class="line-clamp-2 text-xxs text-slate-400">{{ produto.descricao || 'sem descrição.' }}</p>
-                  </div>
-
-                  @if (sacola.contemProduto(produto.id)) {
-                    <div class="mt-2 rounded-lg border border-orange-100 bg-orange-50 p-2 text-center text-xxs font-bold text-orange-700">
-                      ⏰ Na sua sacola! Expira em: {{ tempoDoProduto(produto.id) }}
-                    </div>
-                  } @else if (produto.status === 'Reservado') {
-                    <div class="mt-2 rounded-lg border border-slate-100 bg-slate-50 p-2 text-center text-xxs font-bold text-slate-500">
-                      Peça reservada
+              <article class="group relative flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                [class.border-[#F50057]]="sacola.contemProduto(produto.id)"
+                [class.border-[#EAD5DA]]="!sacola.contemProduto(produto.id)">
+                <div class="relative aspect-square overflow-hidden bg-gradient-to-b from-[#FCEEF1] to-[#F8DDE4]">
+                  @if (produto.imagem_url && !imagensComErro().has(produto.id)) {
+                    <img [src]="produto.imagem_url" [alt]="produto.nome" loading="lazy" (error)="marcarImagemComErro(produto.id)"
+                      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      [class.opacity-60]="produto.status !== 'Disponivel' && !sacola.contemProduto(produto.id)" />
+                  } @else {
+                    <div class="flex h-full w-full flex-col items-center justify-center gap-1"
+                      [class.opacity-60]="produto.status !== 'Disponivel' && !sacola.contemProduto(produto.id)">
+                      <svg class="h-24 w-24 drop-shadow-sm sm:h-28 sm:w-28" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                        <circle cx="60" cy="62" r="46" fill="white" fill-opacity=".5"/>
+                        <path d="m92 22 1.8 4.9 4.9 1.8-4.9 1.8L92 35.4l-1.8-4.9-4.9-1.8 4.9-1.8L92 22Z" fill="#F50057" fill-opacity=".65"/>
+                        <path d="M60 22c0-5 8-5 8 0l-8 5" stroke="#580444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M60 27 28 46c-2 1.3-1 4.4 1.4 4.4h61.2c2.4 0 3.4-3.1 1.4-4.4L60 27Z" fill="#FFFDF9" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+                        @switch (produto.id % 3) {
+                          @case (0) {
+                            <path d="m36 58-11 6 7 11 7-4v33h42V71l7 4 7-11-11-6-10-4c-3 7-8 10-14 10s-11-3-14-10l-10 4Z" fill="#F8AFC1" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+                          }
+                          @case (1) {
+                            <path d="M47 56h26l5 20 10 32H32l10-32 5-20Z" fill="#F50057" fill-opacity=".78" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+                            <path d="M47 56c3 6 6 9 13 9s10-3 13-9" stroke="#580444" stroke-width="2.5" stroke-linecap="round"/>
+                          }
+                          @default {
+                            <path d="M40 58h40l-3 16-6 36H62l-2-30-2 30H46l-6-36-3-16Z" fill="#7D344B" fill-opacity=".88" stroke="#580444" stroke-width="2.5" stroke-linejoin="round"/>
+                            <path d="M40 66h40" stroke="#FFFDF9" stroke-width="2" stroke-linecap="round" stroke-opacity=".8"/>
+                          }
+                        }
+                      </svg>
+                      <span class="font-serif text-xs font-bold text-[#580444]/60">elas no closet</span>
                     </div>
                   }
 
-                  <div class="mt-4 flex flex-col gap-2 border-t border-slate-50 pt-3">
-                    <span class="text-base font-black text-slate-900">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
-                    <button [disabled]="produto.status !== 'Disponivel' || sacola.estaProcessando(produto.id)" [attr.aria-busy]="sacola.estaProcessando(produto.id)" (click)="reservar(produto)" class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#580444] py-2 text-center text-xxs font-black uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#F50057] disabled:bg-slate-100 disabled:text-slate-300">
-                      @if (sacola.estaProcessando(produto.id)) {
-                        <span class="h-3 w-3 animate-spin rounded-full border-2 border-[#580444]/30 border-t-[#580444]" aria-hidden="true"></span>
-                        reservando...
-                      } @else {
-                        {{ produto.status === 'Disponivel' ? 'comprar' : (sacola.contemProduto(produto.id) ? 'na sacola' : 'reservada') }}
-                      }
-                    </button>
+                  <span class="absolute left-2 top-2 rounded-full bg-white/90 px-2.5 py-1 text-xxs font-black uppercase tracking-wider text-[#580444] shadow-sm">{{ produto.estado_conservacao }}</span>
+
+                  @if (!sacola.contemProduto(produto.id) && produto.status === 'Reservado') {
+                    <span class="absolute inset-x-2 bottom-2 rounded-full bg-[#580444]/90 px-3 py-1.5 text-center text-xs font-bold text-white">Peça reservada</span>
+                  }
+                </div>
+
+                <div class="flex flex-grow flex-col p-3 sm:p-4">
+                  <p class="text-lg font-black leading-none text-[#580444]">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</p>
+                  <h4 class="mt-2 line-clamp-2 min-h-[2.25rem] text-sm font-semibold leading-snug text-[#3A2030]">{{ produto.nome }}</h4>
+                  <p class="mt-1 text-xxs font-bold uppercase tracking-wider text-[#7D344B]/70">peça única</p>
+
+                  @if (sacola.contemProduto(produto.id)) {
+                    <p class="mt-3 rounded-lg bg-[#FFE3E8] px-2 py-1.5 text-center text-xs font-bold text-[#F50057]">
+                      Na sua sacola · expira em {{ tempoDoProduto(produto.id) }}
+                    </p>
+                  }
+
+                  <div class="mt-auto pt-3">
+                  <button [disabled]="produto.status !== 'Disponivel' || sacola.estaProcessando(produto.id)" [attr.aria-busy]="sacola.estaProcessando(produto.id)" (click)="reservar(produto)"
+                    class="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#580444] px-3 text-center text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-[#F50057] disabled:bg-[#F4E3E8] disabled:text-[#7D344B]/60">
+                    @if (sacola.estaProcessando(produto.id)) {
+                      <span class="h-3 w-3 animate-spin rounded-full border-2 border-[#580444]/30 border-t-[#580444]" aria-hidden="true"></span>
+                      reservando...
+                    } @else {
+                      {{ produto.status === 'Disponivel' ? 'comprar' : (sacola.contemProduto(produto.id) ? 'na sacola' : 'reservada') }}
+                    }
+                  </button>
                   </div>
                 </div>
-              </div>
+              </article>
             }
           </div>
         } @else if (erroCarregamento()) {
@@ -157,12 +191,51 @@ import { SacolaService } from '../../../core/services/sacola.service';
       </main>
 
       <!-- FOOTER -->
-      <footer class="bg-slate-50 border-t border-slate-200 py-10 px-6 mt-20 text-xs text-slate-400">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <span class="font-serif text-lg font-bold text-[#580444]">elas no closet</span>
-          <span class="text-emerald-600">🔒 ambiente seguro</span>
+      <section class="mt-20 border-t border-[#EAD5DA] bg-[#FCEEF1] px-6 py-6" aria-label="Benefícios">
+        <ul class="mx-auto grid max-w-6xl gap-4 text-center text-sm font-bold text-[#580444] sm:grid-cols-3">
+          <li>✨ Peças únicas e selecionadas</li>
+          <li>⏰ Reserva de 15 minutos na sacola</li>
+          <li>💬 Atendimento pelo WhatsApp</li>
+        </ul>
+      </section>
+      <footer class="bg-[#580444] px-6 pb-6 pt-10 text-sm text-[#F4E3E8]">
+        <div class="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
+          <div>
+            <span class="font-serif text-2xl font-bold text-white">elas no closet</span>
+            <p class="mt-3 max-w-xs text-[#F4E3E8]/80">Peças únicas, com história. Dê um novo ciclo ao seu guarda-roupa.</p>
+          </div>
+          <nav aria-label="Ajuda">
+            <h3 class="text-xs font-black uppercase tracking-wider text-[#F5B1C1]">Ajuda</h3>
+            <ul class="mt-3 space-y-2">
+              <li><button type="button" (click)="exibirAjuda()" class="transition hover:text-[#F50057]">Como funciona</button></li>
+              <li><button type="button" (click)="exibirAjuda()" class="transition hover:text-[#F50057]">Frete e entrega</button></li>
+              <li><button type="button" (click)="exibirAjuda()" class="transition hover:text-[#F50057]">Trocas e devoluções</button></li>
+            </ul>
+          </nav>
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-[#F5B1C1]">Fale com a gente</h3>
+            <ul class="mt-3 space-y-2">
+              <!-- Preencher com o WhatsApp, o Instagram e o horário reais do bazar. -->
+              <li>💬 WhatsApp: [definir]</li>
+              <li>📸 Instagram: [definir]</li>
+              <li>🕘 Atendimento: [definir]</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mx-auto mt-8 flex max-w-6xl flex-col items-center justify-between gap-2 border-t border-white/15 pt-5 text-xs text-[#F4E3E8]/70 md:flex-row">
+          <span>© {{ anoAtual }} Elas no Closet. Todos os direitos reservados.</span>
+          <span>🔒 ambiente seguro</span>
         </div>
       </footer>
+
+      <app-aviso-sacola />
+
+      @if (mostrarTopo()) {
+        <button type="button" (click)="voltarAoTopo()" aria-label="Voltar ao topo"
+          class="fixed bottom-4 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#F50057] text-xl font-black text-white shadow-lg transition hover:bg-[#580444]">
+          <span aria-hidden="true">↑</span>
+        </button>
+      }
 
       @if (ajudaAberta()) {
         <div class="fixed inset-0 z-50 flex items-end justify-center bg-[#580444]/20 p-0 backdrop-blur-sm sm:items-center sm:p-4" (click)="fecharAjuda()">
@@ -221,6 +294,9 @@ export class VitrineComponent implements OnInit {
   erroCarregamento = signal<boolean>(false);
   cartoesCarregando = [0, 1, 2, 3, 4, 5, 6, 7];
   ajudaAberta = signal<boolean>(false);
+  mostrarTopo = signal<boolean>(false);
+  anoAtual = new Date().getFullYear();
+  imagensComErro = signal<Set<number>>(new Set());
 
   passosAjuda = [
     { titulo: 'Escolha sua peça', texto: 'Cada peça é única, de segunda mão, com fotos e descrição reais.' },
@@ -269,8 +345,21 @@ export class VitrineComponent implements OnInit {
     return item ? this.sacola.formatarTempo(this.sacola.segundosRestantes(item)) : '00:00';
   }
 
+  marcarImagemComErro(produtoId: number): void {
+    this.imagensComErro.update(ids => new Set(ids).add(produtoId));
+  }
+
   irParaSacola(): void {
     this.router.navigate(['/sacola']);
+  }
+
+  @HostListener('window:scroll')
+  atualizarBotaoTopo(): void {
+    this.mostrarTopo.set(window.scrollY > 600);
+  }
+
+  voltarAoTopo(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   exibirAjuda(): void {
