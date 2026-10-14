@@ -45,12 +45,14 @@ export interface TokenResposta {
   expires_in: number;
 }
 
+export const API_URL = 'http://localhost:8000';
+
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000';
+  private baseUrl = API_URL;
 
   listarProdutos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/produtos/`);
@@ -92,17 +94,14 @@ export class ApiService {
     return this.http.post<Pedido>(`${this.baseUrl}/pedidos`, dados, { withCredentials: true });
   }
 
-  listarPedidos(chaveAdmin: string, status?: StatusPedido): Observable<Pedido[]> {
+  listarPedidos(status?: StatusPedido): Observable<Pedido[]> {
     return this.http.get<Pedido[]>(`${this.baseUrl}/pedidos`, {
-      headers: { 'X-Admin-Key': chaveAdmin },
       params: status ? { status_pedido: status } : {}
     });
   }
 
-  atualizarStatusPedido(id: number, status: 'Pago' | 'Cancelado', chaveAdmin: string): Observable<Pedido> {
-    return this.http.put<Pedido>(`${this.baseUrl}/pedidos/${id}/status`, { status }, {
-      headers: { 'X-Admin-Key': chaveAdmin }
-    });
+  atualizarStatusPedido(id: number, status: 'Pago' | 'Cancelado'): Observable<Pedido> {
+    return this.http.put<Pedido>(`${this.baseUrl}/pedidos/${id}/status`, { status });
   }
 
   obterMetricasDashboard(): Observable<any> {
