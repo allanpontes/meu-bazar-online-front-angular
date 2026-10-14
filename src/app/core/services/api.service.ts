@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface ItemSacolaResposta {
   produto_id: number;
@@ -45,7 +46,7 @@ export interface TokenResposta {
   expires_in: number;
 }
 
-export const API_URL = 'http://localhost:8000';
+export const API_URL = environment.apiUrl;
 
 @Injectable({
   providedIn: 'root'
