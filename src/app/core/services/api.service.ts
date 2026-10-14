@@ -34,6 +34,17 @@ export interface Pedido extends NovoPedido {
   itens: { produto_id: number | null; nome: string; preco: number }[];
 }
 
+export interface Credenciais {
+  email: string;
+  senha: string;
+}
+
+export interface TokenResposta {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -61,8 +72,8 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/auth/registrar`, dados);
   }
 
-  login(dados: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/auth/login`, dados);
+  login(dados: Credenciais): Observable<TokenResposta> {
+    return this.http.post<TokenResposta>(`${this.baseUrl}/auth/login`, dados);
   }
 
   obterSacola(): Observable<SacolaResposta> {
