@@ -1,15 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
 import { ApiService, Pedido, StatusPedido } from '../../../core/services/api.service';
-
-const CHAVE_SESSAO = 'admin_key';
 
 @Component({
   selector: 'app-pedidos-admin',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, FormsModule],
+  imports: [CurrencyPipe, DatePipe],
   template: `
     <main class="mx-auto w-full max-w-6xl space-y-6 px-6 py-8">
       <div>
@@ -18,15 +15,7 @@ const CHAVE_SESSAO = 'admin_key';
         <p class="mt-2 text-sm text-slate-500">Confirme pagamentos e acompanhe os pedidos recebidos.</p>
       </div>
 
-      @if (!chave()) {
-        <form (ngSubmit)="entrar()" class="max-w-md space-y-3 rounded-2xl border border-[#EAD5DA] bg-white p-5 shadow-sm">
-          <label for="chave" class="block text-xs font-bold uppercase tracking-wider text-[#7D344B]">Chave de acesso</label>
-          <input id="chave" type="password" name="chave" autocomplete="off" [(ngModel)]="chaveDigitada" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-[#580444] focus:outline-none" />
-          @if (erro(); as msg) { <p role="alert" class="text-sm font-bold text-[#F50057]">{{ msg }}</p> }
-          <button type="submit" [disabled]="!chaveDigitada.trim()" class="rounded-full bg-[#580444] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#F50057] disabled:bg-slate-200 disabled:text-slate-400">entrar</button>
-        </form>
-      } @else {
-        <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
           @for (opcao of filtros; track opcao.valor) {
             <button type="button" (click)="filtrar(opcao.valor)" [attr.aria-pressed]="filtro() === opcao.valor"
               class="rounded-full px-4 py-2 text-sm font-bold transition-colors"
@@ -34,7 +23,6 @@ const CHAVE_SESSAO = 'admin_key';
               {{ opcao.rotulo }}
             </button>
           }
-          <button type="button" (click)="sair()" class="ml-auto text-xs font-bold text-slate-500 hover:text-[#F50057]">sair</button>
         </div>
 
         @if (erro(); as msg) {
@@ -87,7 +75,6 @@ const CHAVE_SESSAO = 'admin_key';
             }
           </ul>
         }
-      }
     </main>
   `
 })
@@ -101,8 +88,6 @@ export class PedidosAdminComponent implements OnInit {
     { valor: 'Cancelado', rotulo: 'Cancelados' }
   ];
 
-  chave = signal(sessionStorage.getItem(CHAVE_SESSAO) ?? '');
-  chaveDigitada = '';
   pedidos = signal<Pedido[]>([]);
   filtro = signal<StatusPedido | ''>('');
   carregando = signal(false);
@@ -110,20 +95,7 @@ export class PedidosAdminComponent implements OnInit {
   erro = signal<string | null>(null);
 
   ngOnInit(): void {
-    if (this.chave()) this.carregar();
-  }
-
-  entrar(): void {
-    this.chave.set(this.chaveDigitada.trim());
-    this.chaveDigitada = '';
-    this.carregar(true);
-  }
-
-  sair(): void {
-    sessionStorage.removeItem(CHAVE_SESSAO);
-    this.chave.set('');
-    this.pedidos.set([]);
-    this.erro.set(null);
+    this.carregar();
   }
 
   filtrar(valor: StatusPedido | ''): void {
@@ -131,12 +103,11 @@ export class PedidosAdminComponent implements OnInit {
     this.carregar();
   }
 
-  carregar(validandoChave = false): void {
+  carregar(): void {
     this.carregando.set(true);
     this.erro.set(null);
-    this.api.listarPedidos(this.chave(), this.filtro() || undefined).subscribe({
+    this.api.listarPedidos(this.filtro() || undefined).subscribe({
       next: pedidos => {
-        if (validandoChave) sessionStorage.setItem(CHAVE_SESSAO, this.chave());
         this.pedidos.set(pedidos);
         this.carregando.set(false);
       },
@@ -151,7 +122,7 @@ export class PedidosAdminComponent implements OnInit {
     if (novo === 'Cancelado' && !confirm(`Cancelar o pedido #${pedido.id}? As peças voltam para a vitrine.`)) return;
     this.atualizando.set(pedido.id);
     this.erro.set(null);
-    this.api.atualizarStatusPedido(pedido.id, novo, this.chave()).subscribe({
+    this.api.atualizarStatusPedido(pedido.id, novo).subscribe({
       next: () => {
         this.atualizando.set(null);
         this.carregar();
@@ -176,12 +147,8 @@ export class PedidosAdminComponent implements OnInit {
   }
 
   private tratarErro(e: HttpErrorResponse): void {
-    if (e.status === 401) {
-      this.sair();
-      this.erro.set('Chave de acesso inválida.');
-    } else if (e.status === 503) {
-      this.erro.set('Área administrativa não configurada no servidor.');
-    } else {
+    // No 401 o interceptor já encerra a sessão e leva para o login
+    if (e.status !== 401) {
       this.erro.set(typeof e.error?.detail === 'string' ? e.error.detail : 'Não foi possível concluir a operação.');
     }
   }

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -63,6 +64,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             >
               Ver vitrine
             </a>
+            <button
+              type="button"
+              (click)="auth.logout()"
+              class="rounded-full px-4 py-2 text-sm font-bold text-slate-500 transition-colors hover:text-[#F50057]"
+            >
+              Sair
+            </button>
           </nav>
         </div>
       </header>
@@ -71,4 +79,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     </div>
   `
 })
-export class AdminLayoutComponent {}
+export class AdminLayoutComponent {
+  protected auth = inject(AuthService);
+}
