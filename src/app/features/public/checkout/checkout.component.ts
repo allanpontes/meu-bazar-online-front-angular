@@ -30,6 +30,12 @@ import { SacolaService } from '../../../core/services/sacola.service';
             <p class="mt-2 text-sm text-slate-600">
               Obrigada, {{ p.nome_cliente }}! Vamos entrar em contato pelo WhatsApp para combinar o pagamento e a entrega.
             </p>
+            <div class="mx-auto mt-4 max-w-md rounded-xl border border-[#F5C6D0] bg-[#FFF5F7] px-4 py-3 text-left text-sm text-[#580444]" role="note">
+              <p class="font-bold">⏳ Suas peças estão reservadas</p>
+              <p class="mt-1 text-slate-600">
+                Elas ficam guardadas para você até a confirmação do pagamento. Fique de olho no WhatsApp: se o pagamento não for combinado, o pedido pode ser cancelado e as peças voltam para a vitrine.
+              </p>
+            </div>
             <p class="mt-4 text-lg font-black text-[#580444]">{{ p.subtotal | currency:'BRL':'symbol':'1.2-2' }}</p>
             <ul class="mx-auto mt-4 max-w-sm space-y-1 text-sm text-slate-600">
               @for (item of p.itens; track $index) {
