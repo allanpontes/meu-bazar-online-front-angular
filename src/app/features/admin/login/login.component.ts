@@ -26,8 +26,15 @@ import { AuthService } from '../../../core/services/auth.service';
 
           <div>
             <label for="senha" class="block text-xs font-bold uppercase tracking-wider text-[#7D344B]">Senha</label>
-            <input id="senha" type="password" formControlName="senha" autocomplete="current-password"
-              class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-[#580444] focus:outline-none" />
+            <div class="relative mt-1">
+              <input id="senha" [type]="mostrarSenha() ? 'text' : 'password'" formControlName="senha" autocomplete="current-password"
+                class="w-full rounded-xl border border-slate-200 py-2.5 pl-4 pr-20 text-sm focus:border-[#580444] focus:outline-none" />
+              <button type="button" (click)="mostrarSenha.set(!mostrarSenha())"
+                [attr.aria-pressed]="mostrarSenha()"
+                class="absolute inset-y-0 right-3 text-xs font-bold text-[#7D344B] hover:text-[#F50057]">
+                {{ mostrarSenha() ? 'ocultar' : 'mostrar' }}
+              </button>
+            </div>
           </div>
 
           @if (erro(); as msg) {
@@ -59,6 +66,7 @@ export class LoginComponent {
   });
 
   enviando = signal(false);
+  mostrarSenha = signal(false);
   erro = signal<string | null>(null);
 
   entrar(): void {
