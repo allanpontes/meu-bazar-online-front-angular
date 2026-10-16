@@ -9,6 +9,8 @@ export interface ItemSacolaResposta {
   preco: number;
   imagem_url: string | null;
   estado_conservacao: string | null;
+  tamanho: string | null;
+  categoria: string | null;
   expira_em: string;
   segundos_restantes: number;
 }

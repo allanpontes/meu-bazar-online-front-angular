@@ -154,7 +154,11 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
                 <div class="flex flex-grow flex-col p-3 sm:p-4">
                   <p class="text-lg font-black leading-none text-[#580444]">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</p>
                   <h4 class="mt-2 line-clamp-2 min-h-[2.25rem] text-sm font-semibold leading-snug text-[#3A2030]">{{ produto.nome }}</h4>
-                  <p class="mt-1 text-xxs font-bold uppercase tracking-wider text-[#7D344B]/70">peça única</p>
+                  <p class="mt-1 text-xxs font-bold uppercase tracking-wider text-[#7D344B]/70">
+                    @if (produto.categoria) { {{ produto.categoria }} · }
+                    @if (produto.tamanho) { Tam. {{ produto.tamanho }} · }
+                    peça única
+                  </p>
 
                   @if (sacola.contemProduto(produto.id)) {
                     <p class="mt-3 rounded-lg bg-[#FFE3E8] px-2 py-1.5 text-center text-xs font-bold text-[#F50057]">
