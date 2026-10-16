@@ -1,9 +1,12 @@
-import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
 import { SacolaService } from '../../../core/services/sacola.service';
 import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.component';
+
+const PECAS_POR_PAGINA = 12;
+const CATEGORIAS = ['Roupa', 'Calçado', 'Bolsa', 'Acessório', 'Outros'];
 
 @Component({
   selector: 'app-vitrine',
@@ -108,8 +111,31 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
             </div>
           </section>
         } @else if (produtos().length > 0) {
+          <div class="mb-5 flex items-center gap-3">
+            <div class="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Filtrar por categoria">
+              <button type="button" (click)="selecionarCategoria('')" [attr.aria-pressed]="categoriaAtiva() === ''"
+                class="shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wider transition"
+                [class]="categoriaAtiva() === '' ? 'border-[#580444] bg-[#580444] text-white' : 'border-[#F5B1C1] bg-white text-[#580444] hover:border-[#580444]'">
+                Todos ({{ produtos().length }})
+              </button>
+              @for (cat of categoriasComContagem(); track cat.nome) {
+                <button type="button" (click)="selecionarCategoria(cat.nome)" [attr.aria-pressed]="categoriaAtiva() === cat.nome"
+                  class="shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wider transition"
+                  [class]="categoriaAtiva() === cat.nome ? 'border-[#580444] bg-[#580444] text-white' : 'border-[#F5B1C1] bg-white text-[#580444] hover:border-[#580444]'">
+                  {{ cat.nome }} ({{ cat.total }})
+                </button>
+              }
+            </div>
+            <select (change)="alterarOrdenacao($any($event.target).value)" aria-label="Ordenar peças"
+              class="shrink-0 rounded-full border border-[#F5B1C1] bg-white px-3 py-2 text-xs font-bold text-[#580444] outline-none focus:border-[#580444]">
+              <option value="recentes" [selected]="ordenacao() === 'recentes'">Mais recentes</option>
+              <option value="menor" [selected]="ordenacao() === 'menor'">Menor preço</option>
+              <option value="maior" [selected]="ordenacao() === 'maior'">Maior preço</option>
+            </select>
+          </div>
+
           <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
-            @for (produto of produtos(); track produto.id) {
+            @for (produto of produtosVisiveis(); track produto.id) {
               <article class="group relative flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
                 [class.border-[#F50057]]="sacola.contemProduto(produto.id)"
                 [class.border-[#EAD5DA]]="!sacola.contemProduto(produto.id)">
@@ -180,6 +206,16 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
                   </div>
                 </div>
               </article>
+            }
+          </div>
+
+          <div class="mt-8 flex flex-col items-center gap-2">
+            <p class="text-xs font-bold text-[#7D344B]">Exibindo {{ produtosVisiveis().length }} de {{ produtosFiltrados().length }} peças</p>
+            @if (produtosVisiveis().length < produtosFiltrados().length) {
+              <button type="button" (click)="verMais()"
+                class="rounded-full border border-[#580444] bg-white px-6 py-3 text-sm font-black text-[#580444] transition hover:bg-[#580444] hover:text-white">
+                Ver mais peças
+              </button>
             }
           </div>
         } @else if (erroCarregamento()) {
@@ -295,6 +331,29 @@ export class VitrineComponent implements OnInit {
   sacola = inject(SacolaService);
   
   produtos = signal<any[]>([]);
+  categoriaAtiva = signal<string>('');
+  ordenacao = signal<'recentes' | 'menor' | 'maior'>('recentes');
+  limiteExibicao = signal<number>(PECAS_POR_PAGINA);
+
+  categoriasComContagem = computed(() => {
+    const contagem = new Map<string, number>();
+    for (const p of this.produtos()) {
+      if (p.categoria) contagem.set(p.categoria, (contagem.get(p.categoria) ?? 0) + 1);
+    }
+    return CATEGORIAS.filter(c => contagem.has(c)).map(c => ({ nome: c, total: contagem.get(c)! }));
+  });
+
+  produtosFiltrados = computed(() => {
+    const categoria = this.categoriaAtiva();
+    const lista = categoria ? this.produtos().filter(p => p.categoria === categoria) : [...this.produtos()];
+    switch (this.ordenacao()) {
+      case 'menor': return lista.sort((a, b) => a.preco - b.preco);
+      case 'maior': return lista.sort((a, b) => b.preco - a.preco);
+      default: return lista.sort((a, b) => b.id - a.id);
+    }
+  });
+
+  produtosVisiveis = computed(() => this.produtosFiltrados().slice(0, this.limiteExibicao()));
   carregando = signal<boolean>(true);
   erroCarregamento = signal<boolean>(false);
   cartoesCarregando = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -338,7 +397,23 @@ export class VitrineComponent implements OnInit {
   }
 
   recarregarVitrine(): void {
+    this.categoriaAtiva.set('');
+    this.limiteExibicao.set(PECAS_POR_PAGINA);
     this.carregarDados();
+  }
+
+  selecionarCategoria(categoria: string): void {
+    this.categoriaAtiva.set(categoria);
+    this.limiteExibicao.set(PECAS_POR_PAGINA);
+  }
+
+  alterarOrdenacao(valor: string): void {
+    this.ordenacao.set(valor === 'menor' || valor === 'maior' ? valor : 'recentes');
+    this.limiteExibicao.set(PECAS_POR_PAGINA);
+  }
+
+  verMais(): void {
+    this.limiteExibicao.update(limite => limite + PECAS_POR_PAGINA);
   }
 
   reservar(produto: any): void {
