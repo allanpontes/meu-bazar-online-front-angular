@@ -41,7 +41,9 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
                 <div class="min-w-0 flex-1">
                   <p class="truncate font-bold text-slate-800">{{ item.nome }}</p>
                   @if (item.estado_conservacao) {
-                    <p class="text-xs font-bold uppercase tracking-wider text-[#7D344B]">{{ item.estado_conservacao }}</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-[#7D344B]">
+                      {{ item.estado_conservacao }}@if (item.tamanho) { · Tam. {{ item.tamanho }} }
+                    </p>
                   }
                   <p class="mt-1 text-xs font-bold text-orange-700">⏰ reservada por {{ sacola.formatarTempo(sacola.segundosRestantes(item)) }}</p>
                 </div>

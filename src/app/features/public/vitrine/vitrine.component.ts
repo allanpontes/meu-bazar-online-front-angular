@@ -1,9 +1,12 @@
-import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
 import { SacolaService } from '../../../core/services/sacola.service';
 import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.component';
+
+const PECAS_POR_PAGINA = 12;
+const CATEGORIAS = ['Roupa', 'Calçado', 'Bolsa', 'Acessório', 'Outros'];
 
 @Component({
   selector: 'app-vitrine',
@@ -108,9 +111,32 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
             </div>
           </section>
         } @else if (produtos().length > 0) {
+          <div class="mb-5 flex items-center gap-3">
+            <div class="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Filtrar por categoria">
+              <button type="button" (click)="selecionarCategoria('')" [attr.aria-pressed]="categoriaAtiva() === ''"
+                class="shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wider transition"
+                [class]="categoriaAtiva() === '' ? 'border-[#580444] bg-[#580444] text-white' : 'border-[#F5B1C1] bg-white text-[#580444] hover:border-[#580444]'">
+                Todos ({{ produtos().length }})
+              </button>
+              @for (cat of categoriasComContagem(); track cat.nome) {
+                <button type="button" (click)="selecionarCategoria(cat.nome)" [attr.aria-pressed]="categoriaAtiva() === cat.nome"
+                  class="shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wider transition"
+                  [class]="categoriaAtiva() === cat.nome ? 'border-[#580444] bg-[#580444] text-white' : 'border-[#F5B1C1] bg-white text-[#580444] hover:border-[#580444]'">
+                  {{ cat.nome }} ({{ cat.total }})
+                </button>
+              }
+            </div>
+            <select (change)="alterarOrdenacao($any($event.target).value)" aria-label="Ordenar peças"
+              class="shrink-0 rounded-full border border-[#F5B1C1] bg-white px-3 py-2 text-xs font-bold text-[#580444] outline-none focus:border-[#580444]">
+              <option value="recentes" [selected]="ordenacao() === 'recentes'">Mais recentes</option>
+              <option value="menor" [selected]="ordenacao() === 'menor'">Menor preço</option>
+              <option value="maior" [selected]="ordenacao() === 'maior'">Maior preço</option>
+            </select>
+          </div>
+
           <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
-            @for (produto of produtos(); track produto.id) {
-              <article class="group relative flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            @for (produto of produtosVisiveis(); track produto.id) {
+              <article (click)="abrirDetalhe(produto)" class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
                 [class.border-[#F50057]]="sacola.contemProduto(produto.id)"
                 [class.border-[#EAD5DA]]="!sacola.contemProduto(produto.id)">
                 <div class="relative aspect-square overflow-hidden bg-gradient-to-b from-[#FCEEF1] to-[#F8DDE4]">
@@ -154,7 +180,12 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
                 <div class="flex flex-grow flex-col p-3 sm:p-4">
                   <p class="text-lg font-black leading-none text-[#580444]">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</p>
                   <h4 class="mt-2 line-clamp-2 min-h-[2.25rem] text-sm font-semibold leading-snug text-[#3A2030]">{{ produto.nome }}</h4>
-                  <p class="mt-1 text-xxs font-bold uppercase tracking-wider text-[#7D344B]/70">peça única</p>
+                  @if (produto.tamanho) {
+                    <p class="mt-1 text-xxs font-bold uppercase tracking-wider text-[#7D344B]/70">Tam. {{ produto.tamanho }}</p>
+                  }
+                  @if (produto.estoque > 1) {
+                    <p class="mt-1 text-xxs font-bold uppercase tracking-wider text-[#7D344B]/70">{{ produto.estoque }} disponíveis</p>
+                  }
 
                   @if (sacola.contemProduto(produto.id)) {
                     <p class="mt-3 rounded-lg bg-[#FFE3E8] px-2 py-1.5 text-center text-xs font-bold text-[#F50057]">
@@ -163,7 +194,11 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
                   }
 
                   <div class="mt-auto pt-3">
-                  <button [disabled]="produto.status !== 'Disponivel' || sacola.estaProcessando(produto.id)" [attr.aria-busy]="sacola.estaProcessando(produto.id)" (click)="reservar(produto)"
+                  <button type="button" (click)="abrirDetalhe(produto); $event.stopPropagation()"
+                    class="mb-2 w-full text-center text-xs font-bold text-[#7D344B] underline underline-offset-2">
+                    Ver detalhes
+                  </button>
+                  <button [disabled]="produto.status !== 'Disponivel' || sacola.estaProcessando(produto.id)" [attr.aria-busy]="sacola.estaProcessando(produto.id)" (click)="reservar(produto); $event.stopPropagation()"
                     class="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#580444] px-3 text-center text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-[#F50057] disabled:bg-[#F4E3E8] disabled:text-[#7D344B]/60">
                     @if (sacola.estaProcessando(produto.id)) {
                       <span class="h-3 w-3 animate-spin rounded-full border-2 border-[#580444]/30 border-t-[#580444]" aria-hidden="true"></span>
@@ -175,6 +210,16 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
                   </div>
                 </div>
               </article>
+            }
+          </div>
+
+          <div class="mt-8 flex flex-col items-center gap-2">
+            <p class="text-xs font-bold text-[#7D344B]">Exibindo {{ produtosVisiveis().length }} de {{ produtosFiltrados().length }} peças</p>
+            @if (produtosVisiveis().length < produtosFiltrados().length) {
+              <button type="button" (click)="verMais()"
+                class="rounded-full border border-[#580444] bg-white px-6 py-3 text-sm font-black text-[#580444] transition hover:bg-[#580444] hover:text-white">
+                Ver mais peças
+              </button>
             }
           </div>
         } @else if (erroCarregamento()) {
@@ -237,6 +282,54 @@ import { AvisoSacolaComponent } from '../../../shared/aviso-sacola/aviso-sacola.
         </button>
       }
 
+      @if (detalhe(); as p) {
+        <div class="fixed inset-0 z-50 flex items-end justify-center bg-[#580444]/40 backdrop-blur-sm sm:items-center sm:p-4" (click)="fecharDetalhe()">
+          <section role="dialog" aria-modal="true" [attr.aria-label]="p.nome"
+            class="relative flex h-full w-full max-w-lg flex-col overflow-hidden bg-[#FFFDF9] shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-3xl"
+            (click)="$event.stopPropagation()">
+            <button type="button" (click)="fecharDetalhe()" aria-label="Fechar"
+              class="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl leading-none text-[#580444] shadow-md transition hover:bg-[#F4E3E8]">×</button>
+
+            <div class="flex-1 overflow-y-auto">
+              <div class="aspect-square w-full bg-gradient-to-b from-[#FCEEF1] to-[#F8DDE4]">
+                @if (p.imagem_url && !imagensComErro().has(p.id)) {
+                  <img [src]="p.imagem_url" [alt]="p.nome" (error)="marcarImagemComErro(p.id)" class="h-full w-full object-cover" />
+                } @else {
+                  <div class="flex h-full w-full items-center justify-center font-serif text-sm font-bold text-[#580444]/60">elas no closet</div>
+                }
+              </div>
+              <div class="space-y-3 p-5">
+                <h2 class="pr-2 text-xl font-black leading-tight text-[#580444]">{{ p.nome }}</h2>
+                <p class="text-2xl font-black text-[#580444]">{{ p.preco | currency:'BRL':'symbol':'1.2-2' }}</p>
+                <div class="flex flex-wrap gap-2">
+                  @if (p.categoria) {
+                    <span class="rounded-full bg-[#F4E3E8] px-3 py-1 text-xs font-black uppercase tracking-wider text-[#580444]">{{ p.categoria }}</span>
+                  }
+                  @if (p.tamanho) {
+                    <span class="rounded-full bg-[#F4E3E8] px-3 py-1 text-xs font-black uppercase tracking-wider text-[#580444]">Tam. {{ p.tamanho }}</span>
+                  }
+                  <span class="rounded-full bg-[#F4E3E8] px-3 py-1 text-xs font-black uppercase tracking-wider text-[#580444]">{{ p.estado_conservacao }}</span>
+                </div>
+                @if (p.descricao) {
+                  <p class="whitespace-pre-line text-sm leading-relaxed text-slate-600">{{ p.descricao }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="flex gap-3 border-t border-[#EAD5DA] bg-white p-4">
+              <button type="button" (click)="fecharDetalhe()"
+                class="min-h-11 flex-1 rounded-xl border border-[#580444] px-3 text-xs font-black uppercase tracking-wider text-[#580444] transition hover:bg-[#F4E3E8]">
+                continuar comprando
+              </button>
+              <button type="button" [disabled]="p.status !== 'Disponivel' || sacola.estaProcessando(p.id)" (click)="reservar(p)"
+                class="min-h-11 flex-1 rounded-xl bg-[#580444] px-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-[#F50057] disabled:bg-[#F4E3E8] disabled:text-[#7D344B]/60">
+                {{ p.status === 'Disponivel' ? 'adicionar à sacola' : (sacola.contemProduto(p.id) ? 'na sacola' : 'reservada') }}
+              </button>
+            </div>
+          </section>
+        </div>
+      }
+
       @if (ajudaAberta()) {
         <div class="fixed inset-0 z-50 flex items-end justify-center bg-[#580444]/20 p-0 backdrop-blur-sm sm:items-center sm:p-4" (click)="fecharAjuda()">
           <section role="dialog" aria-modal="true" aria-labelledby="titulo-ajuda"
@@ -290,6 +383,31 @@ export class VitrineComponent implements OnInit {
   sacola = inject(SacolaService);
   
   produtos = signal<any[]>([]);
+  categoriaAtiva = signal<string>('');
+  ordenacao = signal<'recentes' | 'menor' | 'maior'>('recentes');
+  limiteExibicao = signal<number>(PECAS_POR_PAGINA);
+
+  categoriasComContagem = computed(() => {
+    const contagem = new Map<string, number>();
+    for (const p of this.produtos()) {
+      if (p.categoria) contagem.set(p.categoria, (contagem.get(p.categoria) ?? 0) + 1);
+    }
+    return CATEGORIAS.filter(c => contagem.has(c)).map(c => ({ nome: c, total: contagem.get(c)! }));
+  });
+
+  produtosFiltrados = computed(() => {
+    const categoria = this.categoriaAtiva();
+    const lista = categoria ? this.produtos().filter(p => p.categoria === categoria) : [...this.produtos()];
+    switch (this.ordenacao()) {
+      case 'menor': return lista.sort((a, b) => a.preco - b.preco);
+      case 'maior': return lista.sort((a, b) => b.preco - a.preco);
+      default: return lista.sort((a, b) => b.id - a.id);
+    }
+  });
+
+  produtosVisiveis = computed(() => this.produtosFiltrados().slice(0, this.limiteExibicao()));
+  detalheId = signal<number | null>(null);
+  detalhe = computed(() => this.produtos().find(p => p.id === this.detalheId()) ?? null);
   carregando = signal<boolean>(true);
   erroCarregamento = signal<boolean>(false);
   cartoesCarregando = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -333,7 +451,23 @@ export class VitrineComponent implements OnInit {
   }
 
   recarregarVitrine(): void {
+    this.categoriaAtiva.set('');
+    this.limiteExibicao.set(PECAS_POR_PAGINA);
     this.carregarDados();
+  }
+
+  selecionarCategoria(categoria: string): void {
+    this.categoriaAtiva.set(categoria);
+    this.limiteExibicao.set(PECAS_POR_PAGINA);
+  }
+
+  alterarOrdenacao(valor: string): void {
+    this.ordenacao.set(valor === 'menor' || valor === 'maior' ? valor : 'recentes');
+    this.limiteExibicao.set(PECAS_POR_PAGINA);
+  }
+
+  verMais(): void {
+    this.limiteExibicao.update(limite => limite + PECAS_POR_PAGINA);
   }
 
   reservar(produto: any): void {
@@ -368,7 +502,38 @@ export class VitrineComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   fecharAjuda(): void {
-    this.ajudaAberta.set(false);
+    if (this.ajudaAberta()) {
+      this.ajudaAberta.set(false);
+    } else {
+      this.fecharDetalhe();
+    }
+  }
+
+  abrirDetalhe(produto: any): void {
+    if (this.detalheId() === null) {
+      history.pushState({ ...history.state, modalDetalhe: true }, '');
+    }
+    this.detalheId.set(produto.id);
+    document.body.style.overflow = 'hidden';
+  }
+
+  fecharDetalhe(): void {
+    if (this.detalheId() === null) return;
+    if (history.state?.modalDetalhe) {
+      history.back();
+    } else {
+      this.encerrarDetalhe();
+    }
+  }
+
+  @HostListener('window:popstate')
+  aoVoltarNavegador(): void {
+    this.encerrarDetalhe();
+  }
+
+  private encerrarDetalhe(): void {
+    this.detalheId.set(null);
+    document.body.style.overflow = '';
   }
 
   irParaAdmin(): void {
