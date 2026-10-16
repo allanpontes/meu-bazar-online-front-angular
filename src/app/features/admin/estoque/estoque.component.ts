@@ -51,6 +51,24 @@ import { ApiService } from '../../../core/services/api.service';
               </select>
             </div>
 
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="mb-1 block text-xs font-bold text-slate-600" for="categoria">Categoria</label>
+                <select id="categoria" formControlName="categoria" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10">
+                  <option value="">Sem categoria</option>
+                  <option value="Roupa">Roupa</option>
+                  <option value="Calçado">Calçado</option>
+                  <option value="Bolsa">Bolsa</option>
+                  <option value="Acessório">Acessório</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-bold text-slate-600" for="tamanho">Tamanho</label>
+                <input id="tamanho" formControlName="tamanho" maxlength="20" placeholder="PP, M, 38, Único" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10" />
+              </div>
+            </div>
+
             <div>
               <label class="mb-1 block text-xs font-bold text-slate-600" for="imagem">URL da imagem</label>
               <input id="imagem" formControlName="imagem_url" class="w-full rounded-xl border border-slate-200 bg-[#FFFDF9] px-3 py-2.5 text-sm outline-none transition focus:border-[#580444] focus:ring-2 focus:ring-[#580444]/10" />
@@ -132,6 +150,8 @@ export class EstoqueComponent implements OnInit {
     preco: [null as number | null, [Validators.required, Validators.min(0.01)]],
     estoque: [1, [Validators.required, Validators.min(0)]],
     estado_conservacao: ['Bom', Validators.required],
+    categoria: [''],
+    tamanho: ['', Validators.maxLength(20)],
     imagem_url: ['']
   });
 
@@ -155,8 +175,14 @@ export class EstoqueComponent implements OnInit {
 
   salvar() {
     if (this.form.invalid) return;
-    const { descricao, imagem_url, ...resto } = this.form.getRawValue();
-    const payload = { ...resto, descricao: descricao || null, imagem_url: imagem_url || null };
+    const { descricao, imagem_url, categoria, tamanho, ...resto } = this.form.getRawValue();
+    const payload = {
+      ...resto,
+      descricao: descricao || null,
+      imagem_url: imagem_url || null,
+      categoria: categoria || null,
+      tamanho: tamanho.trim() || null
+    };
     const id = this.editandoId();
 
     this.enviando.set(true);
@@ -187,6 +213,8 @@ export class EstoqueComponent implements OnInit {
       preco: produto.preco,
       estoque: produto.estoque,
       estado_conservacao: produto.estado_conservacao,
+      categoria: produto.categoria ?? '',
+      tamanho: produto.tamanho ?? '',
       imagem_url: produto.imagem_url ?? ''
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
