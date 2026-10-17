@@ -82,7 +82,9 @@ export class LoginComponent {
         this.erro.set(
           e.status === 401
             ? 'E-mail ou senha incorretos.'
-            : 'Não foi possível entrar agora. Tente novamente.'
+            : e.status === 429
+              ? 'Muitas tentativas. Aguarde um minuto e tente de novo.'
+              : 'Não foi possível entrar agora. Tente novamente.'
         );
       }
     });
