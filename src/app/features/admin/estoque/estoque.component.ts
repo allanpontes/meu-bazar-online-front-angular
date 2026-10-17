@@ -197,9 +197,15 @@ export class EstoqueComponent implements OnInit {
         this.mostrar(id ? `Produto "${produto.nome}" atualizado.` : `Produto "${produto.nome}" cadastrado (id ${produto.id}).`, false);
         this.limparFormulario();
       },
-      error: () => {
+      error: (err) => {
         this.enviando.set(false);
-        this.mostrar('Não foi possível salvar. Verifique os dados e se o back-end está no ar.', true);
+        const imagemInvalida = err?.status === 422 && JSON.stringify(err.error?.detail ?? '').includes('imagem_url');
+        this.mostrar(
+          imagemInvalida
+            ? 'O endereço da imagem precisa começar com https:// (ou deixe o campo vazio).'
+            : 'Não foi possível salvar. Verifique os dados e se o back-end está no ar.',
+          true
+        );
       }
     });
   }
